@@ -1,10 +1,5 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { BookingStatus } from '@prisma/client';
-import { IsEnum, IsOptional } from 'class-validator';
+import { PartialType } from '@nestjs/swagger';
+
 import { CreateBookingDto } from './create-booking.dto';
 
-export class UpdateBookingDto extends PartialType(CreateBookingDto) {
-  @IsOptional()
-  @IsEnum(BookingStatus)
-  status?: BookingStatus;
-}
+export class UpdateBookingDto extends PartialType(CreateBookingDto) {}
