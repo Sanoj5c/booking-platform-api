@@ -3,9 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { BookingStatus } from '@prisma/client';
+
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { UpdateBookingDto } from './dto/update-booking.dto';
 
 @Injectable()
 export class BookingsService {
@@ -70,12 +71,12 @@ export class BookingsService {
     return booking;
   }
 
-  async update(id: number, updateBookingDto: UpdateBookingDto) {
+  async updateStatus(id: number, status: BookingStatus) {
     const booking = await this.findOne(id);
 
     if (
-      booking.status === 'CANCELLED' &&
-      updateBookingDto.status === 'COMPLETED'
+      booking.status === BookingStatus.CANCELLED &&
+      status === BookingStatus.COMPLETED
     ) {
       throw new BadRequestException(
         'Cancelled bookings cannot be marked as completed',
@@ -84,21 +85,23 @@ export class BookingsService {
 
     return this.prisma.booking.update({
       where: { id },
-      data: updateBookingDto,
+      data: {
+        status,
+      },
     });
   }
 
-  async remove(id: number) {
+  async cancel(id: number) {
     const booking = await this.findOne(id);
 
-    if (booking.status === 'CANCELLED') {
+    if (booking.status === BookingStatus.CANCELLED) {
       throw new BadRequestException('Booking is already cancelled');
     }
 
     return this.prisma.booking.update({
       where: { id },
       data: {
-        status: 'CANCELLED',
+        status: BookingStatus.CANCELLED,
       },
     });
   }
