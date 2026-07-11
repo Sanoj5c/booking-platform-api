@@ -18,9 +18,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const existingUser = await this.usersService.findByEmail(
-      registerDto.email,
-    );
+    const existingUser = await this.usersService.findByEmail(registerDto.email);
 
     if (existingUser) {
       throw new ConflictException('A user with this email already exists');
@@ -74,10 +72,7 @@ export class AuthService {
     };
   }
 
-  private async generateToken(
-    userId: number,
-    email: string,
-  ): Promise<string> {
+  private async generateToken(userId: number, email: string): Promise<string> {
     return this.jwtService.signAsync({
       sub: userId,
       email,

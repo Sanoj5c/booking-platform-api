@@ -1,26 +1,78 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 
 @Injectable()
 export class ServicesService {
-  create(createServiceDto: CreateServiceDto) {
-    return 'This action adds a new service';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(createServiceDto: CreateServiceDto, ownerId: number) {
+    return this.prisma.service.create({
+      data: {
+        title: createServiceDto.title,
+        description: createServiceDto.description,
+        duration: createServiceDto.duration,
+        price: createServiceDto.price,
+        isActive: createServiceDto.isActive ?? true,
+        ownerId,
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all services`;
+  async findAll() {
+    return this.prisma.service.findMany({
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} service`;
+  async findOne(id: number) {
+    const service = await this.prisma.service.findUnique({
+      where: { id },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!service) {
+      throw new NotFoundException('Service not found');
+    }
+
+    return service;
   }
 
-  update(id: number, updateServiceDto: UpdateServiceDto) {
-    return `This action updates a #${id} service`;
+  async update(id: number, updateServiceDto: UpdateServiceDto) {
+    await this.findOne(id);
+
+    return this.prisma.service.update({
+      where: { id },
+      data: updateServiceDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} service`;
+  async remove(id: number) {
+    await this.findOne(id);
+
+    await this.prisma.service.delete({
+      where: { id },
+    });
+
+    return {
+      message: 'Service deleted successfully',
+    };
   }
 }
